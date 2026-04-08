@@ -32,11 +32,11 @@ jobs:
         run: |
           # 这里假设你的主程序文件叫 main.py
           # 如果你的文件叫别的名字（比如 app.py），请把下面的 main.py 改掉
-          pyinstaller --onefile --noconsole test.py
+          pyinstaller --onefile test.py
 
       # 5. 上传产物 (修复了 path 报错)
-      - name: Upload EXE
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: my-app-exe
-          path: dist/  # <--- 这里指定了上传 dist 文件夹
+          path: dist/ # <--- 这里就是关键！告诉它去 dist 文件夹找文件
