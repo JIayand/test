@@ -32,7 +32,7 @@ jobs:
         # --add-data 确保 config.py 被打包进去
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: DingTalk-Reviewer
         path: dist/
