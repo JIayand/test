@@ -19,7 +19,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11' # 指定具体版本，避免 '3.x' 浮动
 
       # 3. 安装依赖 (PyInstaller)
       - name: Install dependencies
@@ -30,13 +30,16 @@ jobs:
       # 4. 打包程序 (关键步骤)
       - name: Run PyInstaller
         run: |
-          # 这里假设你的主程序文件叫 main.py
-          # 如果你的文件叫别的名字（比如 app.py），请把下面的 main.py 改掉
+          # 确保文件名和你的实际主程序一致（比如 main.py / app.py）
           pyinstaller --onefile test.py
 
-      # 5. 上传产物 (修复了 path 报错)
+      # 5. 上传产物 (修复 path 报错 + 优化语法)
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: my-app-exe
-          path: dist/ # <--- 这里就是关键！告诉它去 dist 文件夹找文件
+          # 重点：确保 path 缩进在 with 下面，且路径正确
+          path: |
+            dist/*.exe
+            # 可选：如果需要保留 build 文件夹的日志
+            build/
