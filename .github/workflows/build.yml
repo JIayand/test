@@ -2,37 +2,47 @@ name: Build Windows EXE
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:
+    tags:
+      - 'v*' # 当你推送 v1.0, v1.1 这种标签时触发
+  workflow_dispatch: # 允许手动点击运行
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/upload-artifact@v4
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      # 2. 设置 Python 环境
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x' # 使用最新版 Python，也可以指定 3.9, 3.10 等
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyinstaller
-        pip install -r requirements.txt
-        # ⚠️ 关键：在 Windows 环境下载 Playwright 浏览器
-        playwright install chromium
+      # 3. 安装依赖
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # 安装 Playwright 和 PyInstaller
+          pip install pyinstaller playwright
+          # 安装你的其他依赖（如果项目根目录有 requirements.txt）
+          if (Test-Path requirements.txt) { pip install -r requirements.txt }
+          # 必须安装 Playwright 的浏览器驱动
+          playwright install chromium
 
-    - name: Build EXE
-      run: |
-        pyinstaller --onefile --noconsole --add-data "config.py;." test.py
-        # macOS/Linux 用户用冒号:，Windows Actions 用分号;
-        # --add-data 确保 config.py 被打包进去
+      # 4. 打包 EXE
+      - name: Build EXE with PyInstaller
+        run: |
+          # --onefile: 单文件模式
+          # --noconsole: 无控制台窗口（如果是GUI程序建议加上，如果是脚本建议去掉方便看日志）
+          pyinstaller --onefile --name "MyApp" test.py
+          # 注意：这里假设你的主程序叫 test.py，如果叫 main.py 请修改这里
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: DingTalk-Reviewer
-        path: dist/
+      # 5. 上传产物 (修复了报错的关键步骤)
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-Executable
+          path: dist/  # 这里指定了输出目录，解决了 path 报错
