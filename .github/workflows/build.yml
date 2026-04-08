@@ -2,8 +2,8 @@ name: Build Windows EXE
 
 on:
   push:
-    tags:
-      - 'v*' # 当你推送 v1.0, v1.1 这种标签时触发
+    branches:
+      - main # 监听 main 分支的推送
   workflow_dispatch: # 允许手动点击运行
 
 jobs:
@@ -11,38 +11,32 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # 1. 检出代码
+      # 1. 拉取代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. 设置 Python 环境
+      # 2. 安装 Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x' # 使用最新版 Python，也可以指定 3.9, 3.10 等
+          python-version: '3.x'
 
-      # 3. 安装依赖
+      # 3. 安装依赖 (PyInstaller)
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # 安装 Playwright 和 PyInstaller
-          pip install pyinstaller playwright
-          # 安装你的其他依赖（如果项目根目录有 requirements.txt）
-          if (Test-Path requirements.txt) { pip install -r requirements.txt }
-          # 必须安装 Playwright 的浏览器驱动
-          playwright install chromium
+          pip install pyinstaller
 
-      # 4. 打包 EXE
-      - name: Build EXE with PyInstaller
+      # 4. 打包程序 (关键步骤)
+      - name: Run PyInstaller
         run: |
-          # --onefile: 单文件模式
-          # --noconsole: 无控制台窗口（如果是GUI程序建议加上，如果是脚本建议去掉方便看日志）
-          pyinstaller --onefile --name "MyApp" test.py
-          # 注意：这里假设你的主程序叫 test.py，如果叫 main.py 请修改这里
+          # 这里假设你的主程序文件叫 main.py
+          # 如果你的文件叫别的名字（比如 app.py），请把下面的 main.py 改掉
+          pyinstaller --onefile --noconsole test.py
 
-      # 5. 上传产物 (修复了报错的关键步骤)
-      - name: Upload Artifact
+      # 5. 上传产物 (修复了 path 报错)
+      - name: Upload EXE
         uses: actions/upload-artifact@v4
         with:
-          name: Windows-Executable
-          path: dist/  # 这里指定了输出目录，解决了 path 报错
+          name: my-app-exe
+          path: dist/  # <--- 这里指定了上传 dist 文件夹
